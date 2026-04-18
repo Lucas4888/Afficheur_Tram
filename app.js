@@ -106,7 +106,7 @@ const getBlocks = () => switchMode ? BLOCKS_SWITCHED : BLOCKS_NORMAL;
 const BLOCKS_NORMAL = [
     {
         listEl: neustrieList, sectionId: 'tram-neustrie', line: '3',
-        sectionLabel: 'Tram 3 • <span class="highlight">Neustrie / Rezé</span>',
+        sectionLabel: 'Tram 3 • <span class="highlight">Félix Faure → Neustrie / Rezé</span>',
         rows: [{
             stop: 'FFAU', match: t => t.includes('neustrie') || t.includes('rezé'),
             labelFn: nextLabel, count: 2, etaLabel: 'Commerce', etaMin: FFAU_TO_COMM_MIN,
@@ -114,7 +114,7 @@ const BLOCKS_NORMAL = [
     },
     {
         listEl: marcelPaulList, sectionId: 'tram-marcel-paul', line: '3',
-        sectionLabel: 'Tram 3 • <span class="highlight">Marcel Paul</span>',
+        sectionLabel: 'Tram 3 • <span class="highlight">Félix Faure → Marcel Paul</span>',
         rows: [{
             stop: 'FFAU', match: t => t.includes('marcel paul'),
             labelFn: nextLabel, count: 2, etaLabel: 'Sillon', etaMin: FFAU_TO_SILL_MIN,
@@ -122,7 +122,7 @@ const BLOCKS_NORMAL = [
     },
     {
         listEl: busListEl, sectionId: 'bus-26', line: '26',
-        sectionLabel: 'Bus 26',
+        sectionLabel: 'Bus 26 • <span class="highlight">Félix Faure → Delorme / Jonelière</span>',
         rows: [
             { stop: 'FFAU', match: t => t.includes('région'),   labelFn: () => 'H. Région', count: 2, etaLabel: 'Delorme',   etaMin: FFAU_TO_DLME_MIN },
             { stop: 'FFAU', match: t => t.includes('jonelière'), labelFn: () => 'Jonelière', count: 1, etaLabel: 'Jonelière', etaMin: FFAU_TO_JNLI_MIN },
