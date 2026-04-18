@@ -378,6 +378,58 @@ h1,
     }
 }
 
+/* Switch button (floating) */
+.switch-btn {
+    position: fixed;
+    bottom: clamp(16px, 3vh, 32px);
+    right: clamp(16px, 3vw, 32px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--glass-border);
+    border-radius: 100px;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: clamp(0.85rem, 1.5vmin, 1rem);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    z-index: 20;
+    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+    box-shadow: 0 8px 24px hsla(0, 0%, 0%, 0.3);
+}
+
+.switch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px hsla(0, 0%, 0%, 0.4);
+}
+
+.switch-btn:active {
+    transform: translateY(0);
+}
+
+.switch-btn.active {
+    background: var(--accent-tan);
+    color: var(--bg-deep);
+    border-color: var(--accent-tan);
+    box-shadow: 0 8px 28px hsla(85, 90%, 45%, 0.4);
+}
+
+.switch-btn .switch-icon {
+    font-size: 1.25em;
+    line-height: 1;
+    display: inline-block;
+    transition: transform 0.35s ease;
+}
+
+.switch-btn.active .switch-icon {
+    transform: rotate(180deg);
+}
+
 /* Footer */
 .main-footer {
     margin-top: auto;

@@ -36,6 +36,7 @@ const weatherEl = document.getElementById('weather');
 const lastUpdateEl = document.getElementById('last-update');
 const marketEl = document.getElementById('market-data');
 const immoEl = document.getElementById('immo-data');
+const switchBtn = document.getElementById('switch-btn');
 
 // --- UTILS ---
 const updateClock = () => {
@@ -91,64 +92,151 @@ const formatVariation = (pct) => {
 };
 
 // --- TRANSPORT ---
-const fetchTransport = async () => {
-    try {
-        const response = await fetch(`https://open.tan.fr/ewp/tempsattente.json/${STOP_CODE}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
+// Switch mode: false = normal (departures from FFAU/AFRA, ETA at downstream stop)
+//              true  = inverted (departures from downstream stop, ETA at FFAU/AFRA)
+let switchMode = false;
 
-        // Clear previous entries
-        neustrieList.innerHTML = '';
-        marcelPaulList.innerHTML = '';
-        busListEl.innerHTML = '';
+const nextLabel = i => ['Prochain', 'Suivant'][i] || '';
 
-        if (!data || data.length === 0) {
-            neustrieList.innerHTML = '<div class="time-item empty">--</div>';
-            marcelPaulList.innerHTML = '<div class="time-item empty">--</div>';
-            busListEl.innerHTML = '<div class="time-item empty">--</div>';
-            return;
+// Each block = { listEl, sectionId, sectionLabel, line, rows[] }
+// Each row   = { stop, match (terminus filter), labelFn, count, etaLabel, etaMin }
+const getBlocks = () => switchMode ? BLOCKS_SWITCHED : BLOCKS_NORMAL;
+
+const BLOCKS_NORMAL = [
+    {
+        listEl: neustrieList, sectionId: 'tram-neustrie', line: '3',
+        sectionLabel: 'Tram 3 • <span class="highlight">Neustrie / Rezé</span>',
+        rows: [{
+            stop: 'FFAU', match: t => t.includes('neustrie') || t.includes('rezé'),
+            labelFn: nextLabel, count: 2, etaLabel: 'Commerce', etaMin: FFAU_TO_COMM_MIN,
+        }],
+    },
+    {
+        listEl: marcelPaulList, sectionId: 'tram-marcel-paul', line: '3',
+        sectionLabel: 'Tram 3 • <span class="highlight">Marcel Paul</span>',
+        rows: [{
+            stop: 'FFAU', match: t => t.includes('marcel paul'),
+            labelFn: nextLabel, count: 2, etaLabel: 'Sillon', etaMin: FFAU_TO_SILL_MIN,
+        }],
+    },
+    {
+        listEl: busListEl, sectionId: 'bus-26', line: '26',
+        sectionLabel: 'Bus 26',
+        rows: [
+            { stop: 'FFAU', match: t => t.includes('région'),   labelFn: () => 'H. Région', count: 2, etaLabel: 'Delorme',   etaMin: FFAU_TO_DLME_MIN },
+            { stop: 'FFAU', match: t => t.includes('jonelière'), labelFn: () => 'Jonelière', count: 1, etaLabel: 'Jonelière', etaMin: FFAU_TO_JNLI_MIN },
+        ],
+    },
+    {
+        listEl: c8ListEl, sectionId: 'bus-c8', line: 'C8',
+        sectionLabel: 'C8 • <span class="highlight">Anatole France → Saupin</span>',
+        rows: [{
+            stop: 'AFRA', match: t => t.includes('saupin') || t.includes('gare'),
+            labelFn: nextLabel, count: 2, etaLabel: 'Saupin', etaMin: AFRA_TO_SPIN_MIN,
+        }],
+    },
+];
+
+const BLOCKS_SWITCHED = [
+    {
+        listEl: neustrieList, sectionId: 'tram-neustrie', line: '3',
+        sectionLabel: 'Tram 3 • <span class="highlight">Commerce → Félix Faure</span>',
+        rows: [{
+            stop: 'COMM', match: t => t.includes('marcel paul'),
+            labelFn: nextLabel, count: 2, etaLabel: 'F. Faure', etaMin: FFAU_TO_COMM_MIN,
+        }],
+    },
+    {
+        listEl: marcelPaulList, sectionId: 'tram-marcel-paul', line: '3',
+        sectionLabel: 'Tram 3 • <span class="highlight">Sillon → Félix Faure</span>',
+        rows: [{
+            stop: 'SILL', match: t => t.includes('neustrie') || t.includes('rezé'),
+            labelFn: nextLabel, count: 2, etaLabel: 'F. Faure', etaMin: FFAU_TO_SILL_MIN,
+        }],
+    },
+    {
+        listEl: busListEl, sectionId: 'bus-26', line: '26',
+        sectionLabel: 'Bus 26 • <span class="highlight">→ Félix Faure</span>',
+        rows: [
+            { stop: 'DLME', match: t => t.includes('jonelière'), labelFn: () => 'Delorme',   count: 2, etaLabel: 'F. Faure', etaMin: FFAU_TO_DLME_MIN },
+            { stop: 'JNLI', match: t => t.includes('région'),   labelFn: () => 'Jonelière', count: 1, etaLabel: 'F. Faure', etaMin: FFAU_TO_JNLI_MIN },
+        ],
+    },
+    {
+        listEl: c8ListEl, sectionId: 'bus-c8', line: 'C8',
+        sectionLabel: 'C8 • <span class="highlight">Saupin → Anatole France</span>',
+        rows: [{
+            stop: 'SPIN', match: t => t.includes('marcel paul'),
+            labelFn: nextLabel, count: 2, etaLabel: 'A. France', etaMin: AFRA_TO_SPIN_MIN,
+        }],
+    },
+];
+
+const fetchStop = async (stopCode) => {
+    const r = await fetch(`https://open.tan.fr/ewp/tempsattente.json/${stopCode}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+};
+
+const fetchAllTransport = async () => {
+    const blocks = getBlocks();
+
+    // Collect unique stops & fetch them in parallel
+    const stops = [...new Set(blocks.flatMap(b => b.rows.map(r => r.stop)))];
+    const results = await Promise.allSettled(stops.map(fetchStop));
+    const stopData = {};
+    stops.forEach((stop, i) => {
+        if (results[i].status === 'fulfilled') stopData[stop] = results[i].value;
+        else console.error(`Stop ${stop} fetch failed:`, results[i].reason);
+    });
+
+    // Render each block
+    blocks.forEach(block => {
+        // Update section label
+        const section = document.getElementById(block.sectionId);
+        const labelEl = section?.querySelector('.section-label');
+        if (labelEl) labelEl.innerHTML = block.sectionLabel;
+
+        // Clear list and append matching items
+        block.listEl.innerHTML = '';
+        let appended = 0;
+        let hasError = false;
+
+        for (const row of block.rows) {
+            const data = stopData[row.stop];
+            if (!data) { hasError = true; continue; }
+            const items = data
+                .filter(i => i.ligne.numLigne === block.line && row.match(i.terminus.toLowerCase()))
+                .slice(0, row.count);
+            items.forEach((item, idx) => {
+                block.listEl.appendChild(createTimeItem(item.temps, row.labelFn(idx), row.etaMin, row.etaLabel));
+                appended++;
+            });
         }
 
-        const counts = { n: 0, mp: 0 };
+        if (!appended) {
+            block.listEl.innerHTML = hasError
+                ? '<div class="time-item error">Flux indisponible</div>'
+                : '<div class="time-item empty">--</div>';
+        }
+    });
 
-        // Sort tram lines first
-        data.forEach(item => {
-            const line = item.ligne.numLigne;
-            const terminus = item.terminus.toLowerCase();
-
-            if (line === '3' && (terminus.includes('neustrie') || terminus.includes('rezé')) && counts.n < 2) {
-                const label = counts.n === 0 ? 'Prochain' : 'Suivant';
-                neustrieList.appendChild(createTimeItem(item.temps, label, FFAU_TO_COMM_MIN, 'Commerce'));
-                counts.n++;
-            } else if (line === '3' && terminus.includes('marcel paul') && counts.mp < 2) {
-                const label = counts.mp === 0 ? 'Prochain' : 'Suivant';
-                marcelPaulList.appendChild(createTimeItem(item.temps, label, FFAU_TO_SILL_MIN, 'Sillon'));
-                counts.mp++;
-            }
-        });
-
-        // Bus 26: Hôtel de Région first, then Jonelière
-        const busHotel = data.filter(i => i.ligne.numLigne === '26' && i.terminus.toLowerCase().includes('région')).slice(0, 2);
-        const busJon = data.filter(i => i.ligne.numLigne === '26' && i.terminus.toLowerCase().includes('jonelière')).slice(0, 1);
-
-        busHotel.forEach(item => busListEl.appendChild(createTimeItem(item.temps, 'H. Région', FFAU_TO_DLME_MIN, 'Delorme')));
-        busJon.forEach(item => busListEl.appendChild(createTimeItem(item.temps, 'Jonelière', FFAU_TO_JNLI_MIN, 'Jonelière')));
-
-        // Fallback empty states
-        if (!neustrieList.children.length) neustrieList.innerHTML = '<div class="time-item empty">--</div>';
-        if (!marcelPaulList.children.length) marcelPaulList.innerHTML = '<div class="time-item empty">--</div>';
-        if (!busListEl.children.length) busListEl.innerHTML = '<div class="time-item empty">--</div>';
-
-        lastUpdateEl.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-    } catch (error) {
-        console.error('Transport fetch error:', error);
-        const errorHtml = '<div class="time-item error">Flux indisponible</div>';
-        neustrieList.innerHTML = errorHtml;
-        marcelPaulList.innerHTML = errorHtml;
-        busListEl.innerHTML = errorHtml;
-    }
+    lastUpdateEl.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
+
+// Switch button handler
+if (switchBtn) {
+    switchBtn.addEventListener('click', () => {
+        switchMode = !switchMode;
+        switchBtn.classList.toggle('active', switchMode);
+        switchBtn.setAttribute('aria-pressed', String(switchMode));
+        // Show skeletons while re-fetching
+        getBlocks().forEach(b => {
+            b.listEl.innerHTML = '<div class="time-item skeleton"></div>';
+        });
+        fetchAllTransport();
+    });
+}
 
 // --- WEATHER ---
 const WEATHER_SYMBOLS = {
@@ -276,50 +364,13 @@ const fetchMarket = async () => {
 updateClock();
 setInterval(updateClock, 1000);
 
-fetchTransport();
+fetchAllTransport();
 fetchWeather();
 fetchMarket();
 
-setInterval(fetchTransport, 30_000);   // 30s
-setInterval(fetchWeather, 900_000);    // 15min
-setInterval(fetchMarket, 600_000);     // 10min
-
-// --- BUS C8 (Anatole France → Gare Sud / Saupin) ---
-const fetchC8 = async () => {
-    try {
-        const response = await fetch(`https://open.tan.fr/ewp/tempsattente.json/${STOP_CODE_C8}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-
-        c8ListEl.innerHTML = '';
-
-        // Direction Gare Sud/Saupin = sens 2 (terminus "Saupin" ou "Gare Sud")
-        const buses = data
-            .filter(i => i.ligne.numLigne === 'C8' &&
-                (i.terminus.toLowerCase().includes('saupin') ||
-                 i.terminus.toLowerCase().includes('gare')))
-            .slice(0, 2);
-
-        if (!buses.length) {
-            c8ListEl.innerHTML = '<div class="time-item empty">--</div>';
-            return;
-        }
-
-        let count = 0;
-        buses.forEach(item => {
-            const label = count === 0 ? 'Prochain' : 'Suivant';
-            c8ListEl.appendChild(createTimeItem(item.temps, label, AFRA_TO_SPIN_MIN, 'Saupin'));
-            count++;
-        });
-
-    } catch (error) {
-        console.error('C8 fetch error:', error);
-        c8ListEl.innerHTML = '<div class="time-item error">Flux indisponible</div>';
-    }
-};
-
-fetchC8();
-setInterval(fetchC8, 30_000);
+setInterval(fetchAllTransport, 30_000); // 30s
+setInterval(fetchWeather, 900_000);     // 15min
+setInterval(fetchMarket, 600_000);      // 10min
 
 // --- REAL ESTATE (DVF open data, pre-computed) ---
 // Values from Haversine filter around Félix Faure — refreshed annually.
