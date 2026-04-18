@@ -378,6 +378,16 @@ h1,
     border-left: 6px solid var(--text-dim);
 }
 
+/* La liste des horaires remplit l'espace restant et centre verticalement */
+.times-list {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(4px, 1vh, 10px);
+}
+
 .tram-focus {
     border-left-color: var(--accent-tan);
 }
@@ -394,10 +404,10 @@ h1,
 .tram-focus .time-item,
 .bus-focus .time-item,
 .c8-focus .time-item {
-    font-size: clamp(2rem, 4.5vw, 5.5vh);
+    font-size: clamp(2.5rem, 5vw, 9vh);
     font-weight: 700;
     width: 100%;
-    grid-template-columns: clamp(70px, 12vmin, 100px) auto auto 1fr;
+    grid-template-columns: clamp(80px, 14vmin, 110px) auto auto 1fr;
 }
 
 .stop-eta {
@@ -422,10 +432,10 @@ h1,
 /* Time Item details */
 .time-item {
     display: grid;
-    grid-template-columns: clamp(70px, 12vmin, 100px) auto auto;
+    grid-template-columns: clamp(80px, 14vmin, 110px) auto auto;
     align-items: center;
     gap: clamp(8px, 1.5vmin, 16px);
-    height: clamp(2.5rem, 7vh, 5rem);
+    height: auto;           /* la hauteur est portée par la font, plus par un clamp rigide */
     animation: fadeIn 0.5s ease forwards;
     width: fit-content;
 }
@@ -556,13 +566,14 @@ h1,
 
 /* Footer */
 .main-footer {
-    margin-top: auto;
-    padding: clamp(10px, 2vh, 20px) 0;
+    flex-shrink: 0;
+    padding: clamp(4px, 0.8vh, 10px) 0;
     border-top: 1px solid var(--glass-border);
     color: var(--text-dim);
-    font-size: 0.9rem;
+    font-size: clamp(0.55rem, 1.2vmin, 0.7rem);
     display: flex;
     justify-content: center;
+    opacity: 0.6;
 }
 
 /* Mobile portrait — stack all transport blocks vertically with equal heights */
