@@ -157,7 +157,7 @@ const BLOCKS_SWITCHED = [
     },
     {
         listEl: busListEl, sectionId: 'bus-26', line: '26',
-        sectionLabel: 'Bus 26 • <span class="highlight">→ Félix Faure</span>',
+        sectionLabel: 'Bus 26 • <span class="highlight">Delorme → Félix Faure</span>',
         rows: [
             { stop: 'DLME', match: t => t.includes('jonelière'), labelFn: () => 'Delorme',   count: 2, etaLabel: 'F. Faure', etaMin: FFAU_TO_DLME_MIN },
             { stop: 'JNLI', match: t => t.includes('région'),   labelFn: () => 'Jonelière', count: 1, etaLabel: 'F. Faure', etaMin: FFAU_TO_JNLI_MIN },
