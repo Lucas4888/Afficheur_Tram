@@ -528,45 +528,52 @@ const fetchAgenda = async () => {
 };
 
 const renderBanner = async () => {
-    // 1) TAN alerts take priority
-    try {
-        const alerts = await fetchTanAlerts();
-        if (alerts.length) {
-            const first = alerts[0];
-            const title = first.texte_vocal || first.intitule || 'Perturbation en cours';
-            bannerEl.className = 'banner banner--alert';
-            bannerEl.innerHTML = `
-                <span class="banner-icon">⚠️</span>
-                <span class="banner-text"><strong>Trafic TAN</strong> — ${title}${alerts.length > 1 ? `<span class="banner-count">+${alerts.length - 1}</span>` : ''}</span>
-            `;
-            bannerEl.hidden = false;
-            return;
-        }
-    } catch (e) { console.error('TAN alerts error:', e); }
+    // Fetch both in parallel — they're independent
+    const [alertRes, agendaRes] = await Promise.allSettled([fetchTanAlerts(), fetchAgenda()]);
 
-    // 2) Otherwise today's agenda
-    try {
-        const events = await fetchAgenda();
-        if (events.length) {
-            const fmt = (ev) => {
-                if (ev.allDay) return `<strong>${ev.summary || 'Événement'}</strong>`;
-                const t = ev.occurrence.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                return `<strong>${t}</strong> ${ev.summary || ''}`;
-            };
-            const preview = events.slice(0, 3).map(fmt).join(' • ');
-            const extra = events.length > 3 ? `<span class="banner-count">+${events.length - 3}</span>` : '';
-            bannerEl.className = 'banner banner--agenda';
-            bannerEl.innerHTML = `
+    const parts = [];
+
+    // TAN alerts row
+    if (alertRes.status === 'fulfilled' && alertRes.value.length) {
+        const alerts = alertRes.value;
+        const first = alerts[0];
+        const title = first.texte_vocal || first.intitule || 'Perturbation en cours';
+        const count = alerts.length > 1 ? `<span class="banner-count">+${alerts.length - 1}</span>` : '';
+        parts.push(`
+            <div class="banner-row banner--alert">
+                <span class="banner-icon">⚠️</span>
+                <span class="banner-text"><strong>Trafic TAN</strong> — ${title}${count}</span>
+            </div>`);
+    } else if (alertRes.status === 'rejected') {
+        console.error('TAN alerts error:', alertRes.reason);
+    }
+
+    // Agenda row
+    if (agendaRes.status === 'fulfilled' && agendaRes.value.length) {
+        const events = agendaRes.value;
+        const fmt = (ev) => {
+            if (ev.allDay) return `<strong>${ev.summary || 'Événement'}</strong>`;
+            const t = ev.occurrence.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            return `<strong>${t}</strong> ${ev.summary || ''}`;
+        };
+        const preview = events.slice(0, 3).map(fmt).join(' • ');
+        const extra = events.length > 3 ? `<span class="banner-count">+${events.length - 3}</span>` : '';
+        parts.push(`
+            <div class="banner-row banner--agenda">
                 <span class="banner-icon">📅</span>
                 <span class="banner-text">${preview}${extra}</span>
-            `;
-            bannerEl.hidden = false;
-            return;
-        }
-    } catch (e) { console.error('Agenda error:', e); }
+            </div>`);
+    } else if (agendaRes.status === 'rejected') {
+        console.error('Agenda error:', agendaRes.reason);
+    }
 
-    // 3) Nothing to show
-    bannerEl.hidden = true;
+    if (parts.length) {
+        bannerEl.className = 'banner';
+        bannerEl.innerHTML = parts.join('');
+        bannerEl.hidden = false;
+    } else {
+        bannerEl.hidden = true;
+    }
 };
 
 renderBanner();
