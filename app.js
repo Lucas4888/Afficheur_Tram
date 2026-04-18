@@ -683,7 +683,7 @@ const fetchFuel = async () => {
     try {
         // Recherche dans un rayon de 10 km autour du centre de Nantes
         const lat = 47.2091, lon = -1.5573;
-        const where = `within_distance(geo_point, geom'POINT(${lon} ${lat})', 10km) AND gazole_prix IS NOT NULL`;
+        const where = `within_distance(geom, geom'POINT(${lon} ${lat})', 10km) AND gazole_prix IS NOT NULL`;
         const url = `https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records?where=${encodeURIComponent(where)}&order_by=gazole_prix%20asc&limit=1`;
         const r = await fetch(url);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
