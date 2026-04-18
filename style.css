@@ -388,6 +388,7 @@ h1,
 
 .stop-eta {
     justify-self: end;
+    grid-column: -1 / auto;   /* toujours dans la dernière colonne, même en mode "Arrive" */
     text-align: right;
     font-size: clamp(0.75rem, 1.8vmin, 1rem);
     font-weight: 400;

@@ -551,13 +551,34 @@ const occurrenceOnDate = (ev, target) => {
     return null;
 };
 
+// Plusieurs proxies CORS en fallback (les proxies publics sont instables)
+const CORS_PROXIES = [
+    u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+];
+
+const fetchViaProxies = async (url) => {
+    const errors = [];
+    for (const build of CORS_PROXIES) {
+        try {
+            const r = await fetch(build(url));
+            if (!r.ok) { errors.push(`${build.name || 'proxy'} HTTP ${r.status}`); continue; }
+            const text = await r.text();
+            if (!text || text.length < 20) { errors.push('empty body'); continue; }
+            return text;
+        } catch (e) {
+            errors.push(e.message);
+        }
+    }
+    throw new Error(`Tous les proxies CORS ont échoué: ${errors.join(' | ')}`);
+};
+
 const fetchAgenda = async () => {
     if (!ICAL_URL) return [];
-    const proxied = `https://api.cors.lol/?url=${encodeURIComponent(ICAL_URL)}`;
-    const r = await fetch(proxied);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const text = await r.text();
+    const text = await fetchViaProxies(ICAL_URL);
     const events = parseICS(text);
+    console.log(`[Agenda] ${events.length} événements parsés dans l'iCal`);
 
     const now = new Date();
     const todayMidnight    = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -576,10 +597,12 @@ const fetchAgenda = async () => {
         }
     }
 
-    return result.sort((a, b) => {
+    const sorted = result.sort((a, b) => {
         if (a.isTomorrow !== b.isTomorrow) return a.isTomorrow ? 1 : -1;
         return a.occurrence - b.occurrence;
     });
+    console.log(`[Agenda] ${sorted.length} événement(s) retenu(s) pour aujourd'hui${targets.length > 1 ? ' + demain' : ''}`);
+    return sorted;
 };
 
 const renderBanner = async () => {
