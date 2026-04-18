@@ -251,6 +251,56 @@ h1,
     font-weight: 600;
 }
 
+/* Hourly weather timeline (next 5h) */
+.weather-hourly {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--glass-border);
+    justify-content: space-between;
+}
+
+.weather-hourly .hour {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 36px;
+}
+
+.weather-hourly .hour-time {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.weather-hourly .hour-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.weather-hourly .hour-rain {
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.weather-hourly .hour-rain.rain-low {
+    color: var(--text-dim);
+}
+
+.weather-hourly .hour-rain.rain-mid {
+    color: hsl(200, 80%, 70%);
+}
+
+.weather-hourly .hour-rain.rain-high {
+    color: hsl(200, 90%, 60%);
+    font-weight: 700;
+}
+
 /* Dashboard Layout */
 .dashboard {
     display: flex;

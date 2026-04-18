@@ -262,17 +262,39 @@ const WEATHER_LABELS = {
 
 const fetchWeather = async () => {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&hourly=precipitation_probability&timezone=Europe%2FParis`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&hourly=precipitation_probability,weathercode&timezone=Europe%2FParis`;
         const response = await fetch(url);
         const data = await response.json();
         const current = data.current_weather;
 
-        // Match precipitation probability to the current hour
-        const currentHour = new Date().getHours();
-        const proba = data.hourly.precipitation_probability[currentHour] ?? 0;
+        // Find the index of the current hour within the hourly.time array
+        const now = new Date();
+        const currentHourISO = now.toISOString().slice(0, 13); // YYYY-MM-DDTHH
+        const hourlyTimes = data.hourly.time || [];
+        let startIdx = hourlyTimes.findIndex(t => t.slice(0, 13) === currentHourISO);
+        if (startIdx < 0) startIdx = now.getHours(); // fallback
 
+        const proba = data.hourly.precipitation_probability[startIdx] ?? 0;
         const symbol = WEATHER_SYMBOLS[current.weathercode] ?? '🌡️';
         const label = WEATHER_LABELS[current.weathercode] ?? 'Météo';
+
+        // Build next 5 hours timeline (skip current hour, show +1h to +5h)
+        const hoursHtml = [1, 2, 3, 4, 5].map(offset => {
+            const idx = startIdx + offset;
+            const t = hourlyTimes[idx];
+            if (!t) return '';
+            const hour = t.slice(11, 13); // 'HH'
+            const p = data.hourly.precipitation_probability[idx] ?? 0;
+            const code = data.hourly.weathercode[idx] ?? 0;
+            const icon = WEATHER_SYMBOLS[code] ?? '🌡️';
+            const rainClass = p >= 50 ? 'high' : p >= 20 ? 'mid' : 'low';
+            return `
+                <div class="hour">
+                    <span class="hour-time">${hour}h</span>
+                    <span class="hour-icon">${icon}</span>
+                    <span class="hour-rain rain-${rainClass}">${p}%</span>
+                </div>`;
+        }).join('');
 
         weatherEl.innerHTML = `
             <div class="weather-info">
@@ -283,6 +305,7 @@ const fetchWeather = async () => {
                     <span class="rain-proba">💧 ${proba}% pluie</span>
                 </div>
             </div>
+            <div class="weather-hourly">${hoursHtml}</div>
         `;
     } catch (error) {
         console.error('Weather fetch error:', error);
