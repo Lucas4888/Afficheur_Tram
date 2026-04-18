@@ -495,39 +495,58 @@ const parseICS = (text) => {
 
 const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 
-// Return today's occurrence time (Date), or null if the event doesn't occur today
-const occurrenceToday = (ev, now = new Date()) => {
-    const ts = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const te = new Date(ts.getTime() + 86400000 - 1);
+// Return the occurrence time (Date) of ev on target day (midnight local), or null
+const occurrenceOnDate = (ev, target) => {
     if (!ev.start) return null;
+    const tStart = target.getTime();           // midnight of target day
+    const tEnd   = tStart + 86400000;          // midnight of next day (exclusive)
 
     if (!ev.rrule) {
         if (ev.allDay) {
-            const startDay = new Date(ev.start.getFullYear(), ev.start.getMonth(), ev.start.getDate());
-            if (startDay.getTime() === ts.getTime()) return ev.start;
-            return null;
+            // iCal all-day: DTSTART is inclusive, DTEND is exclusive (next day)
+            const evS = new Date(ev.start.getFullYear(), ev.start.getMonth(), ev.start.getDate()).getTime();
+            const evE = ev.end
+                ? new Date(ev.end.getFullYear(), ev.end.getMonth(), ev.end.getDate()).getTime()
+                : evS + 86400000;
+            return (tStart >= evS && tStart < evE) ? ev.start : null;
         }
-        if (ev.start >= ts && ev.start <= te) return ev.start;
-        return null;
+        // Timed event: check timestamp falls in target day
+        const ms = ev.start.getTime();
+        return (ms >= tStart && ms < tEnd) ? ev.start : null;
     }
 
-    // Recurring
-    if (ev.start > te) return null;
-    const until = ev.rrule.UNTIL ? parseICSDate(ev.rrule.UNTIL, []) : null;
-    if (until && ts > until) return null;
+    // --- Recurring ---
+    // Event hasn't started yet on this target day
+    const evStartDay = new Date(ev.start.getFullYear(), ev.start.getMonth(), ev.start.getDate()).getTime();
+    if (tStart < evStartDay) return null;
+
+    // Past UNTIL
+    if (ev.rrule.UNTIL) {
+        const until = parseICSDate(ev.rrule.UNTIL, []);
+        const untilDay = new Date(until.getFullYear(), until.getMonth(), until.getDate()).getTime();
+        if (tStart > untilDay) return null;
+    }
 
     const build = () => {
-        const o = new Date(ts);
+        const o = new Date(target);
         if (!ev.allDay) o.setHours(ev.start.getHours(), ev.start.getMinutes(), 0, 0);
         return o;
     };
 
-    if (ev.rrule.FREQ === 'DAILY') return build();
-    if (ev.rrule.FREQ === 'WEEKLY') {
+    const freq = ev.rrule.FREQ;
+    if (freq === 'DAILY') return build();
+    if (freq === 'WEEKLY') {
         const byDay = ev.rrule.BYDAY
             ? ev.rrule.BYDAY.split(',').map(s => s.replace(/^[+-]?\d+/, ''))
             : [DAY_CODES[ev.start.getDay()]];
-        if (byDay.includes(DAY_CODES[now.getDay()])) return build();
+        return byDay.includes(DAY_CODES[target.getDay()]) ? build() : null;
+    }
+    if (freq === 'MONTHLY') {
+        return ev.start.getDate() === target.getDate() ? build() : null;
+    }
+    if (freq === 'YEARLY') {
+        return (ev.start.getMonth() === target.getMonth() && ev.start.getDate() === target.getDate())
+            ? build() : null;
     }
     return null;
 };
@@ -539,11 +558,28 @@ const fetchAgenda = async () => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const text = await r.text();
     const events = parseICS(text);
+
     const now = new Date();
-    return events
-        .map(e => ({ ...e, occurrence: occurrenceToday(e, now) }))
-        .filter(e => e.occurrence)
-        .sort((a, b) => a.occurrence - b.occurrence);
+    const todayMidnight    = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowMidnight = new Date(todayMidnight.getTime() + 86400000);
+
+    // À partir de 20h on affiche aussi les événements de demain
+    const targets = now.getHours() >= 20
+        ? [{ date: todayMidnight, isTomorrow: false }, { date: tomorrowMidnight, isTomorrow: true }]
+        : [{ date: todayMidnight, isTomorrow: false }];
+
+    const result = [];
+    for (const { date, isTomorrow } of targets) {
+        for (const ev of events) {
+            const occ = occurrenceOnDate(ev, date);
+            if (occ) result.push({ ...ev, occurrence: occ, isTomorrow });
+        }
+    }
+
+    return result.sort((a, b) => {
+        if (a.isTomorrow !== b.isTomorrow) return a.isTomorrow ? 1 : -1;
+        return a.occurrence - b.occurrence;
+    });
 };
 
 const renderBanner = async () => {
@@ -571,9 +607,10 @@ const renderBanner = async () => {
     if (agendaRes.status === 'fulfilled' && agendaRes.value.length) {
         const events = agendaRes.value;
         const fmt = (ev) => {
-            if (ev.allDay) return `<strong>${ev.summary || 'Événement'}</strong>`;
+            const pfx = ev.isTomorrow ? 'Demain · ' : '';
+            if (ev.allDay) return `<strong>${pfx}${ev.summary || 'Événement'}</strong>`;
             const t = ev.occurrence.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            return `<strong>${t}</strong> ${ev.summary || ''}`;
+            return `<strong>${pfx}${t}</strong> ${ev.summary || ''}`;
         };
         const preview = events.slice(0, 3).map(fmt).join(' • ');
         const extra = events.length > 3 ? `<span class="banner-count">+${events.length - 3}</span>` : '';
