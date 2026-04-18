@@ -416,7 +416,7 @@ setInterval(fetchWeather, 900_000);     // 15min
 setInterval(fetchMarket, 600_000);      // 10min
 
 // --- BANNER (TAN alerts → fallback to today's agenda) ---
-const RELEVANT_LINES = ['3', '26', 'C8'];
+const RELEVANT_LINES = ['3'];
 const ICAL_URL = import.meta.env.VITE_ICAL_URL;
 
 // Extract affected line numbers from a TAN alert payload
