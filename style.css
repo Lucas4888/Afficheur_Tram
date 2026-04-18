@@ -237,15 +237,40 @@ h1,
     font-weight: 600;
 }
 
-/* Major Focus (Neustrie) */
-.major-focus {
-    border-left: 8px solid var(--accent-tan);
+/* Transport grids — 2 equal columns per row */
+.line-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-main);
 }
 
-.major-focus #neustrie-list .time-item {
-    font-size: clamp(3rem, 13vmin, 10vh);
-    font-weight: 800;
-    color: var(--accent-tan);
+/* Uniform block styles for all transport sections */
+.tram-focus,
+.bus-focus,
+.c8-focus {
+    display: flex;
+    flex-direction: column;
+    border-left: 6px solid var(--text-dim);
+}
+
+.tram-focus {
+    border-left-color: var(--accent-tan);
+}
+
+.bus-focus {
+    border-left-color: var(--accent-bus);
+}
+
+.c8-focus {
+    border-left-color: var(--accent-c8);
+}
+
+/* Uniform time-item size across all 4 blocks */
+.tram-focus .time-item,
+.bus-focus .time-item,
+.c8-focus .time-item {
+    font-size: clamp(2.5rem, 6vw, 8vh);
+    font-weight: 700;
     width: 100%;
     grid-template-columns: clamp(80px, 15vmin, 120px) auto auto 1fr;
 }
@@ -266,47 +291,6 @@ h1,
     color: var(--text-primary);
     font-family: 'Outfit', sans-serif;
     font-variant-numeric: tabular-nums;
-}
-
-/* Secondary Grid */
-.secondary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: var(--gap-main);
-}
-
-.minor-focus,
-.bus-focus,
-.c8-focus {
-    display: flex;
-    flex-direction: column;
-    border-left: 4px solid var(--text-dim);
-}
-
-.minor-focus .time-item,
-.bus-focus .time-item,
-.c8-focus .time-item {
-    width: 100%;
-    grid-template-columns: clamp(80px, 15vmin, 120px) auto auto 1fr;
-}
-
-.minor-focus {
-    border-left-color: var(--text-primary);
-}
-
-.bus-focus {
-    border-left-color: var(--accent-bus);
-}
-
-.c8-focus {
-    border-left-color: var(--accent-c8);
-}
-
-.minor-focus .time-item,
-.bus-focus .time-item,
-.c8-focus .time-item {
-    font-size: clamp(2.5rem, 12vmin, 8vh);
-    font-weight: 700;
 }
 
 /* Time Item details */

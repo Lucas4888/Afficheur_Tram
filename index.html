@@ -12,7 +12,7 @@
 </head>
 <body>
     <div class="background-overlay"></div>
-    
+
     <header class="main-header">
         <div class="time-container">
             <h1 id="clock">00:00</h1>
@@ -37,24 +37,25 @@
     </header>
 
     <main class="dashboard">
-        <!-- TRAM SECTION MAJEURE (Neustrie/Rezé) -->
-        <section class="section major-focus" id="tram-neustrie">
-            <div class="section-label">Tram 3 • <span class="highlight">Direction Neustrie / Rezé</span></div>
-            <div id="neustrie-list" class="times-list">
-                <div class="time-item skeleton"></div>
-            </div>
-        </section>
+        <!-- TRAM ROW -->
+        <div class="line-grid">
+            <section class="section tram-focus" id="tram-neustrie">
+                <div class="section-label">Tram 3 • <span class="highlight">Neustrie / Rezé</span></div>
+                <div id="neustrie-list" class="times-list">
+                    <div class="time-item skeleton"></div>
+                </div>
+            </section>
 
-        <div class="secondary-grid">
-            <!-- TRAM SECTION SECONDAIRE (Marcel Paul) -->
-            <section class="section minor-focus" id="tram-marcel-paul">
+            <section class="section tram-focus" id="tram-marcel-paul">
                 <div class="section-label">Tram 3 • <span class="highlight">Marcel Paul</span></div>
                 <div id="marcel-paul-list" class="times-list">
                     <div class="time-item skeleton"></div>
                 </div>
             </section>
+        </div>
 
-            <!-- BUS SECTION -->
+        <!-- BUS ROW -->
+        <div class="line-grid">
             <section class="section bus-focus" id="bus-26">
                 <div class="section-label">Bus 26</div>
                 <div id="bus-list" class="times-list">
@@ -62,7 +63,6 @@
                 </div>
             </section>
 
-            <!-- BUS C8 SECTION (Anatole France) -->
             <section class="section c8-focus" id="bus-c8">
                 <div class="section-label">C8 • <span class="highlight">Anatole France → Gare Sud</span></div>
                 <div id="c8-list" class="times-list">
