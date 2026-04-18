@@ -15,12 +15,12 @@ const FFAU_TO_JNLI_MIN = 20; // Travel time FFAU → Jonelière (Bus 26, ~8 stop
 // Real estate: pre-computed from DVF open data (data.gouv.fr)
 // Source: files.data.gouv.fr/geo-dvf/latest/csv/{year}/communes/44/44109.csv
 // Method: Haversine filter around Félix Faure (47.2091, -1.5573)
-//   Maisons  : r=1500m — 26 tx (2024), 28 tx (2023)   avg €/m²
-//   Apparts  : r=600m  — 172 tx (2024), 164 tx (2023)  avg €/m²
-// Last updated: April 2025 — refresh annually when DVF data updates
+//   Maisons  : r=1500m — 20 tx (2025), 26 tx (2024)   avg €/m²
+//   Apparts  : r=600m  — 194 tx (2025), 172 tx (2024)  avg €/m²
+// Last updated: April 2026 — refresh annually when DVF data updates
 const IMMO = {
-    maison:  { ppm2_cur: 5413, ppm2_prev: 5643, surface: 200 },  // 2024 vs 2023
-    appart:  { ppm2_cur: 4136, ppm2_prev: 4163, surface: 100 },  // 2024 vs 2023
+    maison:  { ppm2_cur: 6095, ppm2_prev: 5413, surface: 200 },  // 2025 vs 2024 (+12,6% — 20 tx)
+    appart:  { ppm2_cur: 4024, ppm2_prev: 4136, surface: 100 },  // 2025 vs 2024 (−2,7% — 194 tx)
 };
 
 // --- DOM ELEMENTS ---
