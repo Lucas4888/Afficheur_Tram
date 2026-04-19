@@ -413,7 +413,9 @@ const fetchMarket = async () => {
         html += buildCard('Indép. AM', `€${current.toFixed(2)}`, change);
     } catch { html += buildErrorCard('Indép. AM'); }
 
+    // Réinsérer fuel-data en premier (renderMarket écrase innerHTML donc on le remet)
     marketEl.innerHTML = html;
+    marketEl.prepend(fuelEl);
 };
 
 // --- INITIALIZATION ---
