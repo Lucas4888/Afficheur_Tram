@@ -614,11 +614,23 @@ const fetchAgenda = async () => {
         ? [{ date: todayMidnight, isTomorrow: false }, { date: tomorrowMidnight, isTomorrow: true }]
         : [{ date: todayMidnight, isTomorrow: false }];
 
+    // Debug: log all events with their RRULE to help diagnose
+    console.log('[Agenda] Tous les événements parsés:');
+    events.forEach(ev => {
+        const rruleStr = ev.rrule ? JSON.stringify(ev.rrule) : 'none';
+        console.log(`  • "${ev.summary}" | start=${ev.start?.toISOString()} | end=${ev.end?.toISOString() ?? 'none'} | allDay=${ev.allDay} | rrule=${rruleStr}`);
+    });
+
     const result = [];
     for (const { date, isTomorrow } of targets) {
         for (const ev of events) {
             const occ = occurrenceOnDate(ev, date);
-            if (occ) result.push({ ...ev, occurrence: occ, isTomorrow });
+            if (occ) {
+                console.log(`[Agenda] ✅ retenu: "${ev.summary}" pour ${date.toDateString()}`);
+                result.push({ ...ev, occurrence: occ, isTomorrow });
+            } else {
+                console.log(`[Agenda] ❌ filtré: "${ev.summary}" pour ${date.toDateString()}`);
+            }
         }
     }
 
