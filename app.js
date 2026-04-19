@@ -232,6 +232,7 @@ if (switchBtn) {
         switchMode = !switchMode;
         switchBtn.classList.toggle('active', switchMode);
         switchBtn.setAttribute('aria-pressed', String(switchMode));
+        document.querySelector('.dashboard').classList.toggle('switch-active', switchMode);
         // Show skeletons while re-fetching
         getBlocks().forEach(b => {
             b.listEl.innerHTML = '<div class="time-item skeleton"></div>';

@@ -368,6 +368,14 @@ h1,
     min-height: 0;
 }
 
+/* En mode switch : fond légèrement teinté sur tous les blocs */
+.switch-active .tram-focus,
+.switch-active .bus-focus,
+.switch-active .c8-focus {
+    background: hsla(260, 60%, 18%, 0.55);
+    border-color: hsla(260, 60%, 60%, 0.25);
+}
+
 /* Uniform block styles for all transport sections */
 .tram-focus,
 .bus-focus,
