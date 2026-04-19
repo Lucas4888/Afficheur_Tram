@@ -547,7 +547,19 @@ const occurrenceOnDate = (ev, target) => {
     };
 
     const freq = ev.rrule.FREQ;
-    if (freq === 'DAILY') return build();
+    if (freq === 'DAILY') {
+        // Sans UNTIL ni COUNT : utiliser DTEND comme fin de récurrence,
+        // sinon limiter à 30 jours après le démarrage (évite les évènements "infinis" d'années passées)
+        if (!ev.rrule.UNTIL && !ev.rrule.COUNT) {
+            if (ev.end) {
+                const endDay = new Date(ev.end.getFullYear(), ev.end.getMonth(), ev.end.getDate()).getTime();
+                if (tStart >= endDay) return null;
+            } else {
+                if (tStart > evStartDay + 30 * 86400000) return null;
+            }
+        }
+        return build();
+    }
     if (freq === 'WEEKLY') {
         const byDay = ev.rrule.BYDAY
             ? ev.rrule.BYDAY.split(',').map(s => s.replace(/^[+-]?\d+/, ''))
