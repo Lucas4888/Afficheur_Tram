@@ -523,9 +523,10 @@ const occurrenceOnDate = (ev, target) => {
                 : evS + 86400000;
             return (tStart >= evS && tStart < evE) ? ev.start : null;
         }
-        // Timed event: check timestamp falls in target day
-        const ms = ev.start.getTime();
-        return (ms >= tStart && ms < tEnd) ? ev.start : null;
+        // Timed event: show on any day the event overlaps (handles multi-day events)
+        const ms    = ev.start.getTime();
+        const msEnd = ev.end ? ev.end.getTime() : ms + 3600000;
+        return (ms < tEnd && msEnd > tStart) ? ev.start : null;
     }
 
     // --- Recurring ---
@@ -548,15 +549,10 @@ const occurrenceOnDate = (ev, target) => {
 
     const freq = ev.rrule.FREQ;
     if (freq === 'DAILY') {
-        // Sans UNTIL ni COUNT : utiliser DTEND comme fin de récurrence,
-        // sinon limiter à 30 jours après le démarrage (évite les évènements "infinis" d'années passées)
+        // Sans UNTIL ni COUNT : plafonner à 90 jours après le début
+        // (évite les rappels oubliés d'années passées sans bloquer les nouvelles récurrences)
         if (!ev.rrule.UNTIL && !ev.rrule.COUNT) {
-            if (ev.end) {
-                const endDay = new Date(ev.end.getFullYear(), ev.end.getMonth(), ev.end.getDate()).getTime();
-                if (tStart >= endDay) return null;
-            } else {
-                if (tStart > evStartDay + 30 * 86400000) return null;
-            }
+            if (tStart > evStartDay + 90 * 86400000) return null;
         }
         return build();
     }
