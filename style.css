@@ -193,6 +193,7 @@ h1,
 .extra-bar {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     padding: 5px 0;
     border-top: 1px solid var(--glass-border);
