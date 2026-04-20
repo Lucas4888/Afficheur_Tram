@@ -815,6 +815,34 @@ h1,
     }
 }
 
+/* ── Petit écran en paysage (tablette 8" type Dell Venue 8 Pro, max-height ≤ 850px) ──
+   Sur ces écrans, 5vw est trop large (1280px wide → 64px quelle que soit la hauteur).
+   On rebascule sur dvh pour que la police suive réellement la hauteur disponible.      */
+@media screen and (max-height: 850px) and (min-width: 601px) {
+    .tram-focus .time-item,
+    .bus-focus .time-item,
+    .c8-focus .time-item {
+        font-size: clamp(1.6rem, 6dvh, 7dvh);
+    }
+
+    /* Réduit aussi l'horloge et les marges pour libérer de l'espace vertical */
+    #clock {
+        font-size: clamp(2rem, 5vmin, 3.5rem);
+    }
+
+    .main-header {
+        margin-bottom: clamp(4px, 1vh, 10px);
+    }
+
+    .section {
+        padding: clamp(6px, 1.5vmin, 14px);
+    }
+
+    .section-label {
+        margin-bottom: clamp(3px, 0.7vh, 8px);
+    }
+}
+
 @media (max-height: 400px) {
     .dashboard {
         gap: 8px;
