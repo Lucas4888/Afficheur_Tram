@@ -329,7 +329,7 @@ const fetchWeather = async () => {
             : current.temperature;
         const symbol = WEATHER_SYMBOLS[displayCode] ?? '🌡️';
         const label = WEATHER_LABELS[displayCode] ?? 'Météo';
-        const cityPrefix = weatherLocIdx !== 0 ? `${loc.name} · ` : '';
+        const cityName = weatherLocIdx !== 0 ? loc.name : '';
 
         // Timeline : en mode nuit on part de 8h (offsets 1..5 = 9h–13h), sinon +1h à +5h
         const hoursHtml = [1, 2, 3, 4, 5].map(offset => {
@@ -353,8 +353,8 @@ const fetchWeather = async () => {
             <div class="weather-info">
                 <span class="weather-icon">${symbol}</span>
                 <div class="weather-text">
-                    <span class="temp">${Math.round(displayTemp)}°C</span>
-                    <span class="condition">${cityPrefix}${nightMode ? `${h >= 22 ? 'Demain' : 'Ce matin'} 7h · ${label}` : label}</span>
+                    <span class="temp">${Math.round(displayTemp)}°C${cityName ? ` <span class="weather-city">${cityName}</span>` : ''}</span>
+                    <span class="condition">${nightMode ? `${h >= 22 ? 'Demain' : 'Ce matin'} 7h · ${label}` : label}</span>
                     <span class="rain-proba">💧 ${proba}% pluie</span>
                 </div>
             </div>
