@@ -143,12 +143,14 @@ h1,
 }
 
 .weather-container {
-    text-align: right;
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
-    padding: 16px 24px;
+    padding: 10px 16px;
     border-radius: var(--radius-md);
     border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 /* Market + Immo Data */
@@ -303,45 +305,47 @@ h1,
 .weather-info {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .weather-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
 }
 
 .weather-text {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
 }
 
 .temp {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
+    line-height: 1.1;
 }
 
 .condition {
-    font-size: 0.9rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
     text-transform: capitalize;
+    white-space: nowrap;
 }
 
 .rain-proba {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: hsl(200, 80%, 70%);
-    margin-top: 4px;
     font-weight: 600;
 }
 
-/* Hourly weather timeline (next 5h) */
+/* Hourly weather timeline — à droite de la météo actuelle */
 .weather-hourly {
     display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--glass-border);
+    gap: 8px;
+    padding-left: 14px;
+    border-left: 1px solid var(--glass-border);
     justify-content: space-between;
+    align-items: center;
 }
 
 .weather-hourly .hour {
@@ -349,7 +353,7 @@ h1,
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    min-width: 36px;
+    min-width: 30px;
 }
 
 .weather-hourly .hour-time {
@@ -710,11 +714,22 @@ h1,
     }
 
     .weather-container {
-        text-align: center;
+        flex-direction: column;
+        align-items: center;
         padding: 12px 16px;
+        gap: 10px;
     }
 
     .weather-info {
+        justify-content: center;
+    }
+
+    .weather-hourly {
+        border-left: none;
+        border-top: 1px solid var(--glass-border);
+        padding-left: 0;
+        padding-top: 10px;
+        width: 100%;
         justify-content: center;
     }
 
