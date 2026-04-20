@@ -153,13 +153,7 @@ h1,
     gap: 16px;
 }
 
-/* Market + Immo Data */
-.data-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-}
+/* Market Data (top row) */
 
 .market-container {
     display: flex;
@@ -167,23 +161,15 @@ h1,
     align-items: center;
 }
 
-.market-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    border-top: 1px solid var(--glass-border);
-    padding-top: 8px;
-}
-
-/* Toggle immo */
+/* Toggle données supplémentaires */
 .immo-toggle {
     background: none;
     border: 1px solid var(--glass-border);
     border-radius: 6px;
     color: var(--text-dim);
     cursor: pointer;
-    padding: 2px 6px;
-    font-size: 0.9rem;
+    padding: 2px 7px;
+    font-size: 1rem;
     line-height: 1;
     flex-shrink: 0;
     transition: color 0.2s, border-color 0.2s;
@@ -197,9 +183,32 @@ h1,
     border-color: hsla(220, 80%, 70%, 0.5);
 }
 
-/* État masqué */
-.market-row.immo-hidden #immo-data {
+/* Barre de données supplémentaires (finance + immo) en bas du dashboard */
+.extra-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+    border-top: 1px solid var(--glass-border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+.extra-bar--hidden {
     display: none;
+}
+.extra-bar-sep {
+    width: 1px;
+    height: 28px;
+    background: var(--glass-border);
+    flex-shrink: 0;
+}
+
+/* data-cards en ligne simple */
+.data-cards {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
 }
 
 .market-card {

@@ -46,8 +46,10 @@ const c8ListEl = document.getElementById('c8-list');
 const weatherEl = document.getElementById('weather');
 const lastUpdateEl = document.getElementById('last-update');
 const marketEl = document.getElementById('market-data');
+const marketExtraEl = document.getElementById('market-extra');
 const immoEl = document.getElementById('immo-data');
 const fuelEl = document.getElementById('fuel-data');
+const extraBarEl = document.getElementById('extra-bar');
 const switchBtn = document.getElementById('switch-btn');
 const bannerEl = document.getElementById('banner');
 
@@ -380,42 +382,37 @@ const fetchMarket = async () => {
         fetchYahooChart('0P00001UFS.F'),                   // Indépendance AM France Small & Mid A (Frankfurt)
     ]);
 
-    let html = '';
-
-    // EUR/USD
-    try {
-        const { current, change } = parseMonthlyChange(eurUsdRes.value);
-        html += buildCard('EUR / USD', current.toFixed(4), change);
-    } catch { html += buildErrorCard('EUR/USD'); }
-
-    // TSLA
-    try {
-        const { current, change } = parseMonthlyChange(tslaRes.value);
-        html += buildCard('TSLA', `$${Math.round(current).toLocaleString('fr-FR')}`, change);
-    } catch { html += buildErrorCard('TSLA'); }
-
-    // S&P 500
+    // Ligne du haut : S&P 500 + Ethereum (+ Gazole via fuelEl)
+    let htmlTop = '';
     try {
         const { current, change } = parseMonthlyChange(spRes.value);
-        html += buildCard('S&amp;P 500', Math.round(current).toLocaleString('fr-FR'), change);
-    } catch { html += buildErrorCard('S&P'); }
-
-    // Ethereum
+        htmlTop += buildCard('S&amp;P 500', Math.round(current).toLocaleString('fr-FR'), change);
+    } catch { htmlTop += buildErrorCard('S&P'); }
     try {
         const ethData = ethRes.value[0];
         const ethChange = ethData.price_change_percentage_30d_in_currency ?? ethData.price_change_percentage_30d;
-        html += buildCard('Ξ Ethereum', `$${Math.round(ethData.current_price).toLocaleString('fr-FR')}`, ethChange);
-    } catch { html += buildErrorCard('ETH'); }
+        htmlTop += buildCard('Ξ Ethereum', `$${Math.round(ethData.current_price).toLocaleString('fr-FR')}`, ethChange);
+    } catch { htmlTop += buildErrorCard('ETH'); }
 
-    // Fonds Indépendance AM France Small & Mid A (LU0131510165)
+    // Barre du bas : EUR/USD + TSLA + Indép. AM
+    let htmlExtra = '';
+    try {
+        const { current, change } = parseMonthlyChange(eurUsdRes.value);
+        htmlExtra += buildCard('EUR / USD', current.toFixed(4), change);
+    } catch { htmlExtra += buildErrorCard('EUR/USD'); }
+    try {
+        const { current, change } = parseMonthlyChange(tslaRes.value);
+        htmlExtra += buildCard('TSLA', `$${Math.round(current).toLocaleString('fr-FR')}`, change);
+    } catch { htmlExtra += buildErrorCard('TSLA'); }
     try {
         const { current, change } = parseMonthlyChange(fundRes.value);
-        html += buildCard('Indép. AM', `€${current.toFixed(2)}`, change);
-    } catch { html += buildErrorCard('Indép. AM'); }
+        htmlExtra += buildCard('Indép. AM', `€${current.toFixed(2)}`, change);
+    } catch { htmlExtra += buildErrorCard('Indép. AM'); }
 
-    // Réinsérer fuel-data en premier (renderMarket écrase innerHTML donc on le remet)
-    marketEl.innerHTML = html;
+    // Réinsérer fuel-data en premier (innerHTML écrase le DOM existant)
+    marketEl.innerHTML = htmlTop;
     marketEl.prepend(fuelEl);
+    if (marketExtraEl) marketExtraEl.innerHTML = htmlExtra;
 };
 
 // --- INITIALIZATION ---
@@ -733,21 +730,21 @@ const renderImmo = () => {
 
 renderImmo();
 
-// --- IMMO TOGGLE ---
-const immoToggleBtn = document.getElementById('immo-toggle');
-const immoRow = immoToggleBtn?.closest('.market-row');
-if (immoToggleBtn && immoRow) {
-    const IMMO_KEY = 'immoVisible';
-    const setImmoVisible = (visible) => {
-        immoRow.classList.toggle('immo-hidden', !visible);
-        immoToggleBtn.classList.toggle('active', visible);
-        immoToggleBtn.setAttribute('aria-pressed', String(visible));
-        localStorage.setItem(IMMO_KEY, visible ? '1' : '0');
+// --- EXTRA BAR TOGGLE (données supplémentaires + immo) ---
+const extraToggleBtn = document.getElementById('extra-toggle');
+if (extraToggleBtn && extraBarEl) {
+    const EXTRA_KEY = 'extraBarVisible';
+    const setExtraVisible = (visible) => {
+        extraBarEl.classList.toggle('extra-bar--hidden', !visible);
+        extraToggleBtn.classList.toggle('active', visible);
+        extraToggleBtn.setAttribute('aria-pressed', String(visible));
+        extraToggleBtn.textContent = visible ? '⊟' : '⊞';
+        localStorage.setItem(EXTRA_KEY, visible ? '1' : '0');
     };
     // Restore saved state (visible by default)
-    setImmoVisible(localStorage.getItem(IMMO_KEY) !== '0');
-    immoToggleBtn.addEventListener('click', () => {
-        setImmoVisible(immoRow.classList.contains('immo-hidden'));
+    setExtraVisible(localStorage.getItem(EXTRA_KEY) !== '0');
+    extraToggleBtn.addEventListener('click', () => {
+        setExtraVisible(extraBarEl.classList.contains('extra-bar--hidden'));
     });
 }
 
