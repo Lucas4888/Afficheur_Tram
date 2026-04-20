@@ -300,7 +300,12 @@ const fetchWeather = async () => {
             startIdx = hourlyTimes.findIndex(t => t.slice(0, 13) === targetISO);
             if (startIdx < 0) startIdx = 24 + 8 - now.getHours(); // fallback approx
         } else {
-            const currentHourISO = now.toISOString().slice(0, 13);
+            // Utiliser l'heure LOCALE (Open-Meteo renvoie Europe/Paris, pas UTC)
+            const yy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const currentHourISO = `${yy}-${mm}-${dd}T${hh}`;
             startIdx = hourlyTimes.findIndex(t => t.slice(0, 13) === currentHourISO);
             if (startIdx < 0) startIdx = now.getHours();
         }
