@@ -9,6 +9,7 @@ skills_library/
 agents_definition.md
 launcher.ps1
 
-# Données privées Facebook (source brute, non commitée)
-birthday-calendar.ics
+# Données source non commitées (gros fichiers / données privées)
+.data/birthday-calendar.ics
+.data/DVF_Felix_Faure.xlsx
 gen_birthdays.py
