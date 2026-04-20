@@ -434,7 +434,7 @@ const fetchMarket = async () => {
     try {
         const ethData   = ethRes.value[0];
         const ethChange = ethData.price_change_percentage_30d_in_currency ?? ethData.price_change_percentage_30d;
-        htmlTop += buildCard('Ξ Ethereum', `$${Math.round(ethData.current_price).toLocaleString('fr-FR')}`, ethChange, '30j');
+        htmlTop += buildCard('Ξ Ether', `$${Math.round(ethData.current_price).toLocaleString('fr-FR')}`, ethChange, '30j');
     } catch { htmlTop += buildErrorCard('ETH'); }
 
     // Barre du bas : EUR/USD | Nasdaq | SX5E | TSLA | Indép. AM France | Indép. AM Europe
@@ -904,7 +904,7 @@ const fetchFuel = async () => {
         const ville = (rec.ville || '').split(' ')[0]; // nom court
         fuelEl.innerHTML = `
             <div class="market-card">
-                <span class="market-name">Gazole mini</span>
+                <span class="market-name">Gazole</span>
                 <span class="market-price">${price} €</span>
                 <span class="variation neutral">${ville}</span>
             </div>`;
