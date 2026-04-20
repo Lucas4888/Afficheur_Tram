@@ -516,16 +516,21 @@ h1,
     border-left-color: var(--accent-c8);
 }
 
-/* Uniform time-item size across all 4 blocks.
-   cqh = % of the section's own rendered height → grandit automatiquement
-   quand l'extra-bar est masquée (section plus haute), sans aucun JS. */
+/* Taille adaptive via container queries (cqh = % de la hauteur de la section).
+   Grandit quand l'extra-bar est masquée (section plus haute), sans JS.
+   Cas 2 items : 36cqh — cas 3 items : 24cqh (:has évite le débordement). */
 .tram-focus .time-item,
 .bus-focus .time-item,
 .c8-focus .time-item {
-    font-size: clamp(1.8rem, 28cqh, 6.5rem);
+    font-size: clamp(1.8rem, 36cqh, 8rem);
     font-weight: 700;
     width: 100%;
     grid-template-columns: clamp(80px, 14vmin, 110px) auto auto 1fr;
+}
+
+/* 3 items dans la section → réduction automatique pour éviter le débordement */
+.section:has(.time-item:nth-child(3)) .time-item {
+    font-size: clamp(1.5rem, 24cqh, 5rem);
 }
 
 .stop-eta {
