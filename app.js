@@ -8,6 +8,14 @@ const STOP_CODE = 'FFAU';
 const STOP_CODE_C8 = 'AFRA'; // Anatole France (Bus C8)
 const LAT = 47.2184;
 const LON = -1.5536;
+
+// Villes disponibles pour le switch météo (ordre = cycle du bouton)
+const WEATHER_LOCATIONS = [
+    { name: 'Nantes',     lat: 47.2184, lon: -1.5536 },
+    { name: 'Paris',      lat: 48.8566, lon:  2.3522 },
+    { name: 'Étel',       lat: 47.6500, lon: -3.2000 },
+    { name: 'La Ciotat',  lat: 43.1742, lon:  5.6046 },
+];
 const FFAU_TO_COMM_MIN = 5; // Travel time FFAU → Commerce (Tram 3 Neustrie, ~1 stop)
 const FFAU_TO_SILL_MIN = 3; // Travel time FFAU → Sillon de Bretagne (Tram 3 Marcel Paul, ~1 stop)
 const FFAU_TO_DLME_MIN = 9;  // Travel time FFAU → Delorme (Bus 26 H. Région, ~3 stops)
@@ -278,7 +286,8 @@ const WEATHER_LABELS = {
 
 const fetchWeather = async () => {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&hourly=precipitation_probability,weathercode,temperature_2m&timezone=Europe%2FParis`;
+        const loc = WEATHER_LOCATIONS[weatherLocIdx] ?? WEATHER_LOCATIONS[0];
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current_weather=true&hourly=precipitation_probability,weathercode,temperature_2m&timezone=Europe%2FParis`;
         const response = await fetch(url);
         const data = await response.json();
         const current = data.current_weather;
@@ -320,6 +329,8 @@ const fetchWeather = async () => {
             : current.temperature;
         const symbol = WEATHER_SYMBOLS[displayCode] ?? '🌡️';
         const label = WEATHER_LABELS[displayCode] ?? 'Météo';
+        const loc = WEATHER_LOCATIONS[weatherLocIdx] ?? WEATHER_LOCATIONS[0];
+        const cityPrefix = weatherLocIdx !== 0 ? `${loc.name} · ` : '';
 
         // Timeline : en mode nuit on part de 8h (offsets 1..5 = 9h–13h), sinon +1h à +5h
         const hoursHtml = [1, 2, 3, 4, 5].map(offset => {
@@ -344,7 +355,7 @@ const fetchWeather = async () => {
                 <span class="weather-icon">${symbol}</span>
                 <div class="weather-text">
                     <span class="temp">${Math.round(displayTemp)}°C</span>
-                    <span class="condition">${nightMode ? `${h >= 22 ? 'Demain' : 'Ce matin'} 7h · ${label}` : label}</span>
+                    <span class="condition">${cityPrefix}${nightMode ? `${h >= 22 ? 'Demain' : 'Ce matin'} 7h · ${label}` : label}</span>
                     <span class="rain-proba">💧 ${proba}% pluie</span>
                 </div>
             </div>
@@ -464,6 +475,32 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchAllTransport();
+
+// --- WEATHER LOCATION SWITCH ---
+const WEATHER_LOC_KEY = 'weatherLocIdx';
+let weatherLocIdx = parseInt(localStorage.getItem(WEATHER_LOC_KEY) ?? '0', 10);
+if (isNaN(weatherLocIdx) || weatherLocIdx < 0 || weatherLocIdx >= WEATHER_LOCATIONS.length) weatherLocIdx = 0;
+
+const weatherLocBtn   = document.getElementById('weather-loc-btn');
+const weatherLocLabel = document.getElementById('weather-loc-label');
+
+const syncWeatherLocBtn = () => {
+    const name = WEATHER_LOCATIONS[weatherLocIdx].name;
+    if (weatherLocLabel) weatherLocLabel.textContent = name;
+    if (weatherLocBtn)   weatherLocBtn.classList.toggle('active', weatherLocIdx !== 0);
+};
+
+syncWeatherLocBtn();
+
+if (weatherLocBtn) {
+    weatherLocBtn.addEventListener('click', () => {
+        weatherLocIdx = (weatherLocIdx + 1) % WEATHER_LOCATIONS.length;
+        localStorage.setItem(WEATHER_LOC_KEY, weatherLocIdx);
+        syncWeatherLocBtn();
+        fetchWeather();
+    });
+}
+
 fetchWeather();
 fetchMarket();
 

@@ -20,10 +20,16 @@
                 <h1 id="clock">00:00</h1>
                 <p id="date">Jeudi 16 Avril</p>
             </div>
-            <button id="switch-btn" class="switch-btn" type="button" aria-pressed="false" aria-label="Inverser les directions">
-                <span class="switch-icon" aria-hidden="true">⇅</span>
-                <span class="switch-label">Direction</span>
-            </button>
+            <div class="switch-col">
+                <button id="switch-btn" class="switch-btn" type="button" aria-pressed="false" aria-label="Inverser les directions">
+                    <span class="switch-icon" aria-hidden="true">⇅</span>
+                    <span class="switch-label">Direction</span>
+                </button>
+                <button id="weather-loc-btn" class="switch-btn" type="button" aria-label="Changer de ville météo">
+                    <span class="switch-icon" aria-hidden="true">📍</span>
+                    <span class="switch-label" id="weather-loc-label">Nantes</span>
+                </button>
+            </div>
         </div>
         <div class="data-cards">
             <div id="market-data" class="market-container">
