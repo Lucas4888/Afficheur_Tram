@@ -333,10 +333,10 @@ const renderTideBar = (extrema, port) => {
                 <span class="tide-type ${ev.type === 'HM' ? 'hm' : 'bm'}">${ev.type === 'HM' ? '↑ PM' : '↓ BM'}</span>
                 <span class="tide-time">${timeStr}</span>
                 <span class="tide-height">${heightStr}</span>
-                ${coeff != null ? `<span class="tide-coeff">coeff ${coeff}</span>` : ''}
+                ${coeff != null ? `<span class="tide-coeff">c${coeff}</span>` : ''}
             </div>`;
     }).join('');
-    return `<div class="tide-bar"><span class="tide-label">🌊</span>${items}</div>`;
+    return `<div class="tide-bar">${items}</div>`;
 };
 
 const fetchWeather = async () => {

@@ -324,59 +324,56 @@ h1,
     white-space: nowrap;
 }
 
-/* Marées — ligne 2 du widget météo, visible uniquement pour les villes côtières */
+/* Marées — grille 2×2, chaque event sur une ligne horizontale */
 .tide-bar {
-    width: 100%;            /* force le passage à la ligne suivante */
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-top: 8px;
+    width: 100%;        /* force le passage à la ligne suivante dans .weather-container */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 12px;
+    row-gap: 3px;
+    padding-top: 6px;
     border-top: 1px solid var(--glass-border);
-    justify-content: space-around;
-}
-
-.tide-label {
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    opacity: 0.55;
 }
 
 .tide-event {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    text-align: center;
+    align-items: baseline;
+    gap: 5px;
+    min-width: 0;
 }
 
 .tide-type {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
+    flex-shrink: 0;
 }
 
 .tide-type.hm { color: hsl(200, 80%, 65%); }
 .tide-type.bm { color: hsl(220, 40%, 55%); }
 
 .tide-time {
-    font-size: clamp(0.85rem, 1.8vmin, 1rem);
+    font-size: 0.82rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     font-family: 'Outfit', sans-serif;
     color: var(--text-primary);
+    flex-shrink: 0;
 }
 
 .tide-height {
-    font-size: 0.68rem;
+    font-size: 0.63rem;
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
 }
 
 .tide-coeff {
-    font-size: 0.6rem;
+    font-size: 0.57rem;
     color: var(--text-dim);
-    letter-spacing: 0.5px;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 .weather-info {
