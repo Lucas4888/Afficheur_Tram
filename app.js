@@ -301,8 +301,10 @@ const fetchTides = async (port) => {
     const cached   = tideCache.get(cacheKey);
     if (cached && Date.now() - cached.fetchedAt < 3 * 3600000) return cached.extrema;
 
-    const start = Math.floor(Date.now() / 1000);
-    const end   = start + 48 * 3600;
+    // Démarrer 8h en arrière pour toujours avoir la BM précédente disponible,
+    // même quand la première marée à afficher est une PM (ex: page ouverte le soir)
+    const start = Math.floor((Date.now() - 8 * 3600000) / 1000);
+    const end   = start + 56 * 3600; // 8h passées + 48h à venir
     const url   = `https://api.stormglass.io/v2/tide/extremes/point?lat=${port.lat}&lng=${port.lng}&start=${start}&end=${end}`;
 
     const r = await fetch(url, { headers: { Authorization: STORMGLASS_KEY } });
@@ -311,42 +313,47 @@ const fetchTides = async (port) => {
 
     const nowMs  = Date.now();
     const offset = port.datumOffset ?? 0;
-    const extrema = (data.data || [])
-        .filter(ev => new Date(ev.time).getTime() > nowMs)
+
+    // Tous les extrema (y compris passés récents) pour le calcul du marnage
+    const all = (data.data || []).map(ev => ({
+        type:   ev.type === 'high' ? 'HM' : 'BM',
+        time:   new Date(ev.time),
+        height: ev.height + offset,   // correction référentiel MSL → ZH SHOM
+    }));
+
+    // 4 prochains extrema, avec coefficient calculé sur la BM précédente réelle
+    const extrema = all
+        .filter(ev => ev.time.getTime() > nowMs)
         .slice(0, 4)
-        .map(ev => ({
-            type:   ev.type === 'high' ? 'HM' : 'BM',
-            time:   new Date(ev.time),
-            height: ev.height + offset,   // correction référentiel MSL → ZH SHOM
-        }));
+        .map(ev => {
+            let coeff = null;
+            if (ev.type === 'HM' && port.atlantic && port.marnageGVE) {
+                // BM immédiatement précédente (cherche dans tout l'historique)
+                const prevBM = all
+                    .filter(e => e.type === 'BM' && e.time < ev.time)
+                    .at(-1);
+                if (prevBM) {
+                    const marnage = ev.height - prevBM.height;
+                    coeff = Math.max(20, Math.min(120, Math.round(120 * marnage / port.marnageGVE)));
+                }
+            }
+            return { ...ev, coeff };
+        });
 
     tideCache.set(cacheKey, { extrema, fetchedAt: Date.now() });
     return extrema;
 };
 
-const renderTideBar = (extrema, port) => {
-    const items = extrema.map((ev, i) => {
+const renderTideBar = (extrema) => {
+    const items = extrema.map(ev => {
         const timeStr   = ev.time.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
         const heightStr = ev.height.toFixed(2) + 'm';
-
-        // Coefficient : calculé depuis le marnage (PM − BM précédente ou suivante)
-        // Formule SHOM : coeff = round(120 × marnage / marnageGVE)
-        let coeff = null;
-        if (ev.type === 'HM' && port.atlantic && port.marnageGVE) {
-            const adjBM = extrema.slice(0, i).reverse().find(e => e.type === 'BM')
-                       ?? extrema.slice(i + 1).find(e => e.type === 'BM');
-            if (adjBM) {
-                const marnage = ev.height - adjBM.height;
-                coeff = Math.max(20, Math.min(120, Math.round(120 * marnage / port.marnageGVE)));
-            }
-        }
-
         return `
             <div class="tide-event">
                 <span class="tide-type ${ev.type === 'HM' ? 'hm' : 'bm'}">${ev.type === 'HM' ? '↑ PM' : '↓ BM'}</span>
                 <span class="tide-time">${timeStr}</span>
                 <span class="tide-height">${heightStr}</span>
-                ${coeff != null ? `<span class="tide-coeff">c${coeff}</span>` : ''}
+                ${ev.coeff != null ? `<span class="tide-coeff">c${ev.coeff}</span>` : ''}
             </div>`;
     }).join('');
     return `<div class="tide-bar">${items}</div>`;
@@ -443,7 +450,7 @@ const fetchWeather = async () => {
         weatherEl.innerHTML = buildHtml();
         if (tidesPromise) {
             tidesPromise.then(extrema => {
-                if (extrema.length) weatherEl.innerHTML = buildHtml(renderTideBar(extrema, loc.tidePort));
+                if (extrema.length) weatherEl.innerHTML = buildHtml(renderTideBar(extrema));
             });
         }
     } catch (error) {
